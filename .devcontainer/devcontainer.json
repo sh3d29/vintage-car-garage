@@ -15,7 +15,7 @@
   "forwardPorts": [8000, 5173],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "uname -a",
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
 
   // Configure tool-specific properties.
   "customizations": {
@@ -24,10 +24,39 @@
         "charliermarsh.ruff",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "qwtel.sqlite-viewer",
-        "humao.rest-client",
-        "GitHub.copilot-chat"
-      ]
+        "GitHub.copilot-chat",
+        "tamasfe.even-better-toml",
+        "alexcvzz.vscode-sqlite"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+
+        "sqlite.sqlite3": "/usr/bin/sqlite3",
+
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "explicit",
+            "source.fixAll.ruff": "explicit"
+          }
+        },
+        "python.analysis.typeCheckingMode": "standard",
+        "python-envs.defaultEnvManager": "ms-python.python:poetry",
+        "python-envs.defaultPackageManager": "ms-python.python:poetry",
+
+        "[javascriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        }
+      }
     }
   }
 
