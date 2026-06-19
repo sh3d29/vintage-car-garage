@@ -12,6 +12,7 @@ import com.vintagecargarage.entities.Service;
 public interface ServiceMapper {
 
     @Mapping(target = "storageOwnerId", source = "storageOwner.id")
+    @Mapping(target = "isOptional", source = "optional")
     ServiceDto toDto(Service entity);
 
     List<ServiceDto> toDtoList(List<Service> entities);

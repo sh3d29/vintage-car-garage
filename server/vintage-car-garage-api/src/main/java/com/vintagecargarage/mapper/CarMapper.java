@@ -14,6 +14,7 @@ import com.vintagecargarage.entities.Service;
 public interface CarMapper {
 
     @Mapping(target = "ownerId", source = "owner.id")
+    @Mapping(target = "isMaintained", source = "maintained")
     CarDto toDto(Car entity);
 
     List<CarDto> toDtoList(List<Car> entities);
