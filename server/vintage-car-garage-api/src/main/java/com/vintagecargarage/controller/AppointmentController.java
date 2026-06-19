@@ -1,7 +1,5 @@
 package com.vintagecargarage.controller;
 
-import org.eclipse.microprofile.jwt.JsonWebToken;
-
 import com.vintagecargarage.dtos.AppointmentInputDto;
 import com.vintagecargarage.entities.UserRole;
 import com.vintagecargarage.service.AppointmentService;
@@ -20,16 +18,13 @@ import jakarta.ws.rs.core.Response.Status;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RolesAllowed(UserRole.CAR_OWNER)
-public class AppointmentController {
+public class AppointmentController extends BaseController {
 
     @Inject
     AppointmentService service;
 
-    @Inject
-    JsonWebToken jwt;
-
     @POST
     public Response create(AppointmentInputDto dto) {
-        return Response.status(Status.CREATED).entity(service.createAppointment(jwt.getSubject(), dto)).build();
+        return Response.status(Status.CREATED).entity(service.createAppointment(super.getUserFromJWT(), dto)).build();
     }
 }

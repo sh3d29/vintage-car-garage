@@ -1,6 +1,8 @@
 package com.vintagecargarage.controller;
 
+import com.vintagecargarage.auth.Auth;
 import com.vintagecargarage.dtos.CarOwnerDto;
+import com.vintagecargarage.entities.UserRole;
 import com.vintagecargarage.service.CarOwnerService;
 
 import io.quarkus.security.credential.TokenCredential;
@@ -11,7 +13,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -23,6 +24,9 @@ import jakarta.ws.rs.core.Response.Status;
 public class CarOwnerController extends BaseController {
 
     @Inject
+    Auth auth;
+
+    @Inject
     CarOwnerService service;
 
     @POST
@@ -32,20 +36,18 @@ public class CarOwnerController extends BaseController {
         return Response.status(Status.CREATED).build();
     }
 
-    @RolesAllowed("car-owner")
+    @RolesAllowed(UserRole.CAR_OWNER)
     @GET
-    @Path("/account/{id}")
-    public Response get(@PathParam("id") String id) {
-        assertSelf(id);
-        return Response.ok(service.getCarOwner(id)).build();
+    @Path("/account")
+    public Response get() {
+        return Response.ok(service.getCarOwner(super.getUserFromJWT())).build();
     }
 
-    @RolesAllowed("car-owner")
+    @RolesAllowed(UserRole.CAR_OWNER)
     @PATCH
-    @Path("/account/{id}")
-    public Response patch(@PathParam("id") String id, CarOwnerDto dto) {
-        assertSelf(id);
-        TokenCredential refreshedToken = service.updateCarOwner(id, dto);
+    @Path("/account")
+    public Response patch(CarOwnerDto dto) {
+        TokenCredential refreshedToken = service.updateCarOwner(super.getUserFromJWT(), dto);
         if (refreshedToken != null) {
             return Response.ok(refreshedToken).build();
         }

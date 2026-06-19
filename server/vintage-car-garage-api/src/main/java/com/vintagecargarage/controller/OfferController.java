@@ -1,7 +1,5 @@
 package com.vintagecargarage.controller;
 
-import org.eclipse.microprofile.jwt.JsonWebToken;
-
 import com.vintagecargarage.dtos.OfferInputDto;
 import com.vintagecargarage.dtos.OfferStatusDto;
 import com.vintagecargarage.entities.UserRole;
@@ -22,19 +20,16 @@ import jakarta.ws.rs.core.Response.Status;
 @Path("/offers")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class OfferController {
+public class OfferController extends BaseController {
 
     @Inject
     OfferService service;
-
-    @Inject
-    JsonWebToken jwt;
 
     /** UC_L7: der Lagerhalter erstellt ein Angebot. */
     @POST
     @RolesAllowed(UserRole.STORAGE_OWNER)
     public Response create(OfferInputDto dto) {
-        return Response.status(Status.CREATED).entity(service.createOffer(jwt.getSubject(), dto)).build();
+        return Response.status(Status.CREATED).entity(service.createOffer(super.getUserFromJWT(), dto)).build();
     }
 
     /** UC_E3: der Einlagerer nimmt das Angebot an oder lehnt es ab. */

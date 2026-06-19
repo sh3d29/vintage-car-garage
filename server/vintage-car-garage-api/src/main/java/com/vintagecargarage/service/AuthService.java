@@ -1,12 +1,12 @@
 package com.vintagecargarage.service;
 
+import com.vintagecargarage.auth.Auth;
 import com.vintagecargarage.dtos.LoginDto;
 import com.vintagecargarage.entities.CarOwner;
 import com.vintagecargarage.entities.StorageOwner;
 import com.vintagecargarage.entities.UserRole;
 import com.vintagecargarage.repository.CarOwnerRepository;
 import com.vintagecargarage.repository.StorageOwnerRepository;
-import com.vintagecargarage.utils.Auth;
 
 import io.quarkus.security.credential.TokenCredential;
 import jakarta.enterprise.context.ApplicationScoped;

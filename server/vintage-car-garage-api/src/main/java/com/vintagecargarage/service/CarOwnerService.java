@@ -1,11 +1,11 @@
 package com.vintagecargarage.service;
 
+import com.vintagecargarage.auth.Auth;
 import com.vintagecargarage.dtos.CarOwnerDto;
 import com.vintagecargarage.entities.CarOwner;
 import com.vintagecargarage.entities.UserRole;
 import com.vintagecargarage.mapper.CarOwnerMapper;
 import com.vintagecargarage.repository.CarOwnerRepository;
-import com.vintagecargarage.utils.Auth;
 
 import io.quarkus.security.credential.TokenCredential;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -37,11 +37,6 @@ public class CarOwnerService {
         repository.persist(newCo);
     }
 
-    /**
-     * Aktualisiert das Profil. Wird das Passwort geändert, gibt die Methode einen
-     * frischen Token zurück (sonst null), da die alte Passwort-Version invalidiert
-     * wird.
-     */
     @Transactional
     public TokenCredential updateCarOwner(String id, CarOwnerDto dto) {
         CarOwner co = repository.findById(id);
