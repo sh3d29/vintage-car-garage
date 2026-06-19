@@ -7,12 +7,16 @@
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/devcontainers/features/python:1": { "version": "latest" },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "latest",
+      "installMaven": "true",
+      "mavenVersion": "latest"
+    },
     "ghcr.io/devcontainers/features/node:1": { "version": "latest" }
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [8000, 5173],
+  "forwardPorts": [8080, 5173],
 
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
@@ -21,11 +25,10 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "charliermarsh.ruff",
+        "vscjava.vscode-java-pack",
+        "redhat.vscode-quarkus",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "GitHub.copilot-chat",
-        "tamasfe.even-better-toml",
         "alexcvzz.vscode-sqlite"
       ],
       "settings": {
@@ -33,16 +36,12 @@
 
         "sqlite.sqlite3": "/usr/bin/sqlite3",
 
-        "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff",
-          "editor.codeActionsOnSave": {
-            "source.organizeImports.ruff": "explicit",
-            "source.fixAll.ruff": "explicit"
-          }
+        "[java]": {
+          "editor.defaultFormatter": "redhat.java"
         },
-        "python.analysis.typeCheckingMode": "standard",
-        "python-envs.defaultEnvManager": "ms-python.python:poetry",
-        "python-envs.defaultPackageManager": "ms-python.python:poetry",
+
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.compile.nullAnalysis.mode": "automatic",
 
         "[javascriptreact]": {
           "editor.defaultFormatter": "esbenp.prettier-vscode"

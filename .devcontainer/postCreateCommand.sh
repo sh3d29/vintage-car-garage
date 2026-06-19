@@ -1,11 +1,17 @@
 #!/bin/bash
 
+# 1. System-Pakete
 sudo apt update
-sudo apt install -y sqlite3 curl
+sudo apt install -y sqlite3 curl zip unzip
 
-cd server
-curl -sSL https://install.python-poetry.org | python3 -
-poetry install
+# 2. Das BEREITS VORHANDENE SDKMAN vom Dev-Container laden
+# Microsoft speichert es standardmäßig unter /usr/local/sdkman
+source "/usr/local/sdkman/bin/sdkman-init.sh"
 
-cd ../client
-npm i
+# 3. Quarkus installieren (nutzt jetzt die richtige, globale Version)
+sdk install quarkus
+
+# 4. Frontend
+cd client || exit
+npm install
+cd ..
