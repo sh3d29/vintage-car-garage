@@ -1,7 +1,5 @@
 package com.vintagecargarage.controller;
 
-import org.eclipse.microprofile.jwt.JsonWebToken;
-
 import com.vintagecargarage.dtos.ServiceInputDto;
 import com.vintagecargarage.entities.UserRole;
 import com.vintagecargarage.service.ServicePortfolioService;
@@ -23,17 +21,14 @@ import jakarta.ws.rs.core.Response.Status;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RolesAllowed(UserRole.STORAGE_OWNER)
-public class ServiceController {
+public class ServiceController extends BaseController {
 
     @Inject
     ServicePortfolioService service;
 
-    @Inject
-    JsonWebToken jwt;
-
     @POST
     public Response create(ServiceInputDto dto) {
-        return Response.status(Status.CREATED).entity(service.createService(jwt.getSubject(), dto)).build();
+        return Response.status(Status.CREATED).entity(service.createService(super.getUserFromJWT(), dto)).build();
     }
 
     @PATCH
@@ -46,6 +41,6 @@ public class ServiceController {
     @Path("/{id}")
     public Response delete(@PathParam("id") String id) {
         service.deleteService(id);
-        return Response.noContent().build();
+        return Response.ok().build();
     }
 }

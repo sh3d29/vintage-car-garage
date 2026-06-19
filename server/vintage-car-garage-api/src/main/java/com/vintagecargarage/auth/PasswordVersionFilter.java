@@ -1,9 +1,14 @@
-package com.vintagecargarage.utils;
+package com.vintagecargarage.auth;
 
-import com.vintagecargarage.entities.CarOwner;
-import com.vintagecargarage.entities.StorageOwner;
+import java.io.IOException;
+
+import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.jose4j.json.internal.json_simple.JSONValue;
+
 import com.vintagecargarage.entities.User;
 import com.vintagecargarage.entities.UserRole;
+import com.vintagecargarage.repository.CarOwnerRepository;
+import com.vintagecargarage.repository.StorageOwnerRepository;
 
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,10 +18,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.jose4j.json.internal.json_simple.JSONValue;
-
-import java.io.IOException;
+import lombok.NonNull;
 
 @Provider
 @Priority(Priorities.AUTHORIZATION)
@@ -25,6 +27,12 @@ public class PasswordVersionFilter implements ContainerRequestFilter {
 
     @Inject
     JsonWebToken jwt;
+
+    @Inject
+    CarOwnerRepository carOwnerRepository;
+
+    @Inject
+    StorageOwnerRepository storageOwnerRepository;
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -35,28 +43,18 @@ public class PasswordVersionFilter implements ContainerRequestFilter {
 
         String userId = jwt.getSubject();
         String role = jwt.getGroups().stream().findFirst().get();
-        Object claim = jwt.getClaim("pw_ver");
+        Object pwVersion = jwt.getClaim("pw_ver");
 
-        if (claim == null || userId == null) {
-            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
-            return;
-        }
-
-        int tokenPwVer = Integer.parseInt(claim.toString());
+        int tokenPwVersion = Integer.parseInt(pwVersion.toString());
         User user = null;
 
         if (role.equals(UserRole.STORAGE_OWNER)) {
-            user = StorageOwner.findById(userId);
+            user = storageOwnerRepository.findById(userId);
         } else if (role.equals(UserRole.CAR_OWNER)) {
-            user = CarOwner.findById(userId);
+            user = carOwnerRepository.findById(userId);
         }
 
-        if (user == null) {
-            requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).build());
-            return;
-        }
-
-        if (tokenPwVer < user.getPasswordVersion()) {
+        if (tokenPwVersion < user.getPasswordVersion()) {
             requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED)
                     .entity(JSONValue.toJSONString("Token expired due to password change."))
                     .build());

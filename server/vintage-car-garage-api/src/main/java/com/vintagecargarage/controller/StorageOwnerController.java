@@ -12,7 +12,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
@@ -44,20 +43,18 @@ public class StorageOwnerController extends BaseController {
         return Response.ok(service.searchByCity(city)).build();
     }
 
-    @RolesAllowed("storage-owner")
+    @RolesAllowed(UserRole.STORAGE_OWNER)
     @GET
-    @Path("/account/{id}")
-    public Response get(@PathParam("id") String id) {
-        assertSelf(id);
+    @Path("/account")
+    public Response get(String id) {
         return Response.ok(service.getStorageOwner(id)).build();
     }
 
-    @RolesAllowed("storage-owner")
+    @RolesAllowed(UserRole.STORAGE_OWNER)
     @PATCH
-    @Path("/account/{id}")
-    public Response patch(@PathParam("id") String id, StorageOwnerDto dto) {
-        assertSelf(id);
-        TokenCredential refreshedToken = service.updateStorageOwner(id, dto);
+    @Path("/account")
+    public Response patch(StorageOwnerDto dto) {
+        TokenCredential refreshedToken = service.updateStorageOwner(super.getUserFromJWT(), dto);
         if (refreshedToken != null) {
             return Response.ok(refreshedToken).build();
         }

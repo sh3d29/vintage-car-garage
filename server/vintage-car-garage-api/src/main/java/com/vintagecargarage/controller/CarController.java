@@ -1,7 +1,5 @@
 package com.vintagecargarage.controller;
 
-import org.eclipse.microprofile.jwt.JsonWebToken;
-
 import com.vintagecargarage.dtos.CarInputDto;
 import com.vintagecargarage.dtos.CarStatusDto;
 import com.vintagecargarage.entities.UserRole;
@@ -24,17 +22,14 @@ import jakarta.ws.rs.core.Response.Status;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RolesAllowed(UserRole.CAR_OWNER)
-public class CarController {
+public class CarController extends BaseController {
 
     @Inject
     CarService service;
 
-    @Inject
-    JsonWebToken jwt;
-
     @POST
     public Response create(CarInputDto dto) {
-        return Response.status(Status.CREATED).entity(service.createCar(jwt.getSubject(), dto)).build();
+        return Response.status(Status.CREATED).entity(service.createCar(super.getUserFromJWT(), dto)).build();
     }
 
     @PATCH
@@ -59,6 +54,6 @@ public class CarController {
     @Path("/{id}")
     public Response delete(@PathParam("id") String id) {
         service.deleteCar(id);
-        return Response.noContent().build();
+        return Response.ok().build();
     }
 }

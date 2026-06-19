@@ -14,7 +14,7 @@ import lombok.Setter;
 public class Offer extends BaseEntity {
     private String description;
     private float costs;
-    private boolean accepted;
+    private Boolean accepted;
 
     @ManyToOne
     private Request request;
@@ -27,7 +27,7 @@ public class Offer extends BaseEntity {
         this.request = request;
         this.description = description;
         this.costs = costs;
-        this.accepted = false;
+        this.accepted = null;
     }
 
     /** CO_UC_E3_1: updateOfferStatus (Annahme) */

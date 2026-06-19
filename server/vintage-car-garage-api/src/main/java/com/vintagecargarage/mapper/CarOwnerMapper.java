@@ -10,21 +10,18 @@ import com.vintagecargarage.dtos.CarOwnerDto;
 import com.vintagecargarage.entities.CarOwner;
 
 @Mapper(componentModel = "jakarta")
-public interface CarOwnerMapper extends BaseMapper<CarOwner, CarOwnerDto> {
+public interface CarOwnerMapper {
 
-    @Override
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "passwordVersion", ignore = true)
-    @Mapping(target = "id", ignore = true)
     CarOwner toEntity(CarOwnerDto dto);
 
-    @Override
     CarOwnerDto toDto(CarOwner entity);
 
-    @Override
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "passwordVersion", ignore = true)
-    @Mapping(target = "id", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateFromDto(CarOwnerDto dto, @MappingTarget CarOwner entity);
 }
