@@ -29,7 +29,6 @@ import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -99,16 +98,8 @@ public class StorageOwnerController {
         return Response.ok(services).build();
     }
 
-    @RolesAllowed(UserRole.CAR_OWNER)
-    @GET
-    @Path("/{storageOwnerId}/optional-services")
-    public Response getOptionalServices(@PathParam("storageOwnerId") String storageOwnerId) {
-        List<ServiceOutputDto> services = storageOwnerService.getOptionalServices(storageOwnerId);
-        return Response.ok(services).build();
-    }
-
     @RolesAllowed(UserRole.STORAGE_OWNER)
-    @PUT
+    @PATCH
     @Path("/{storageOwnerId}/services/{serviceId}")
     public Response updateService(
             @PathParam("storageOwnerId") String storageOwnerId,
@@ -142,7 +133,7 @@ public class StorageOwnerController {
     }
 
     @RolesAllowed(UserRole.STORAGE_OWNER)
-    @PUT
+    @PATCH
     @Path("/{storageOwnerId}/stored-cars/{carId}/status")
     public Response updateStoredCarStatus(
             @PathParam("storageOwnerId") String storageOwnerId,

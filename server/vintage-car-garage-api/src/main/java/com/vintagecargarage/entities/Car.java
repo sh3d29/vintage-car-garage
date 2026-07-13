@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -22,6 +24,11 @@ public class Car extends BaseEntity {
     private boolean readyToDrive;
     private boolean isMaintained;
 
+    @Enumerated(EnumType.STRING)
+    private CarCategory category;
+
+    private String manufacturer;
+
     @ManyToMany
     @JoinTable(name = "car_booked_services", joinColumns = @JoinColumn(name = "car_id"), inverseJoinColumns = @JoinColumn(name = "service_id"))
     private Set<Service> bookedServices = new HashSet<>();
@@ -34,9 +41,11 @@ public class Car extends BaseEntity {
     @JoinColumn(name = "current_storage_owner_id")
     private StorageOwner currentStorage;
 
-    public Car(CarOwner carOwner, String licensePlate) {
+    public Car(CarOwner carOwner, String licensePlate, String manufacturer, CarCategory category) {
         this.carOwner = carOwner;
         this.licensePlate = licensePlate;
+        this.manufacturer = manufacturer;
+        this.category = category;
         this.readyToDrive = true;
         this.isMaintained = false;
         this.currentStorage = null;
@@ -56,6 +65,14 @@ public class Car extends BaseEntity {
 
     public void changeLicensePlate(String licensePlate) {
         this.licensePlate = licensePlate;
+    }
+
+    public void changeCategory(CarCategory category) {
+        this.category = category;
+    }
+
+    public void changeManufacturer(String manufacturer) {
+        this.manufacturer = manufacturer;
     }
 
     public void setCurrentStorage(StorageOwner currentStorage) {

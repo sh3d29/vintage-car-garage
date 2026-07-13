@@ -4,16 +4,22 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "dev": "react-router dev",
+    "dev": "react-router dev --host",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
     "@mantine/core": "^9.3.1",
+    "@mantine/dates": "^9.4.1",
+    "@mantine/form": "^9.4.1",
     "@mantine/hooks": "^9.3.1",
+    "@mantine/modals": "^9.4.1",
+    "@mantine/notifications": "^9.4.1",
     "@react-router/node": "7.16.0",
     "@react-router/serve": "7.16.0",
+    "dayjs": "^1.11.21",
     "isbot": "^5.1.36",
+    "jwt-decode": "^4.0.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router": "7.16.0"

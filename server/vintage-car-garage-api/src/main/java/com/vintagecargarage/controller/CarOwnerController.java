@@ -10,6 +10,7 @@ import com.vintagecargarage.dtos.offer.OfferOutputDto;
 import com.vintagecargarage.dtos.offer.OfferResponseDto;
 import com.vintagecargarage.dtos.request.RequestInputDto;
 import com.vintagecargarage.dtos.request.RequestOutputDto;
+import com.vintagecargarage.dtos.service.ServiceOutputDto;
 import com.vintagecargarage.dtos.user.CarOwnerInputDto;
 import com.vintagecargarage.dtos.user.CarOwnerOutputDto;
 import com.vintagecargarage.dtos.user.StorageOwnerSearchResDto;
@@ -158,6 +159,17 @@ public class CarOwnerController {
         return Response.noContent().build();
     }
 
+    @RolesAllowed(UserRole.CAR_OWNER)
+    @GET
+    @Path("/{carOwnerId}/storage-owners/{storageOwnerId}/optional-services")
+    public Response getOptionalServices(
+            @PathParam("carOwnerId") String carOwnerId,
+            @PathParam("storageOwnerId") String storageOwnerId) {
+        authGuard.requireSelf(carOwnerId);
+        List<ServiceOutputDto> services = carOwnerService.getOptionalServices(carOwnerId, storageOwnerId);
+        return Response.ok(services).build();
+    }
+
     // --- Stellplatzangebot anfordern ---
 
     @RolesAllowed(UserRole.CAR_OWNER)
@@ -213,15 +225,6 @@ public class CarOwnerController {
     }
 
     // --- Ein- & Auslagerungstermin koordinieren ---
-
-    @RolesAllowed(UserRole.CAR_OWNER)
-    @GET
-    @Path("/{carOwnerId}/storage-owners")
-    public Response getBookableStorageOwners(@PathParam("carOwnerId") String carOwnerId) {
-        authGuard.requireSelf(carOwnerId);
-        List<StorageOwnerSearchResDto> owners = carOwnerService.getBookableStorageOwners(carOwnerId);
-        return Response.ok(owners).build();
-    }
 
     @RolesAllowed(UserRole.CAR_OWNER)
     @POST

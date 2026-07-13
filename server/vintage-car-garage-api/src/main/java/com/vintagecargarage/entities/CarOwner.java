@@ -24,10 +24,6 @@ public class CarOwner extends User {
     @OneToMany(mappedBy = "carOwner", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Request> requests = new HashSet<>();
 
-    // Der Lebenszyklus eines Termins gehört dem StorageOwner (dessen
-    // appointments-Sammlung kaskadiert). Hier nur die Sicht über die
-    // carOwner-FK – ohne Cascade/orphanRemoval, damit das Freigeben eines
-    // gebuchten Termins den Slot nicht löscht.
     @OneToMany(mappedBy = "carOwner")
     private Set<Appointment> bookedAppointments = new HashSet<>();
 
@@ -46,8 +42,8 @@ public class CarOwner extends User {
             this.lastName = lastName;
     }
 
-    public Car registerCar(String licensePlate) {
-        Car car = new Car(this, licensePlate);
+    public Car registerCar(String licensePlate, String manufacturer, CarCategory category) {
+        Car car = new Car(this, licensePlate, manufacturer, category);
         this.cars.add(car);
         return car;
     }

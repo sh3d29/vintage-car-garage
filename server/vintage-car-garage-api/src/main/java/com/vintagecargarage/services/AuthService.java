@@ -2,13 +2,13 @@ package com.vintagecargarage.services;
 
 import com.vintagecargarage.dtos.auth.AuthUserDto;
 import com.vintagecargarage.dtos.auth.SignInDto;
+import com.vintagecargarage.dtos.mappers.CarOwnerMapper;
+import com.vintagecargarage.dtos.mappers.StorageOwnerMapper;
 import com.vintagecargarage.entities.CarOwner;
 import com.vintagecargarage.entities.StorageOwner;
 import com.vintagecargarage.auth.Auth;
 import com.vintagecargarage.auth.AuthResult;
 import com.vintagecargarage.auth.UserRole;
-import com.vintagecargarage.mappers.CarOwnerMapper;
-import com.vintagecargarage.mappers.StorageOwnerMapper;
 import com.vintagecargarage.repositories.CarOwnerRepository;
 import com.vintagecargarage.repositories.StorageOwnerRepository;
 

@@ -7,5 +7,6 @@ public record OfferOutputDto(
         Boolean accepted,
         String requestId,
         String storageOwnerId,
+        String storageOwnerName,
         String carOwnerId) {
 }
