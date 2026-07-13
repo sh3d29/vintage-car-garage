@@ -1,4 +1,4 @@
-package com.vintagecargarage.mappers;
+package com.vintagecargarage.dtos.mappers;
 
 import java.util.Set;
 
@@ -12,13 +12,14 @@ import com.vintagecargarage.entities.StorageOwner;
 
 public final class StorageOwnerMapper {
 
-    private StorageOwnerMapper() {}
+    private StorageOwnerMapper() {
+    }
 
     public static StorageOwnerOutputDto toStorageOwnerOutputDto(StorageOwner so) {
         LocationDto locationDto = LocationStorageMapper.toLocationDto(so.getLocation());
         StorageDto storageDto = LocationStorageMapper.toStorageDto(so.getStorage());
         return new StorageOwnerOutputDto(so.getId(), so.getEmail(), so.getCompanyName(),
-                so.getCosts(), so.getServiceTime(), locationDto, storageDto,
+                so.getCosts(), so.getServiceStartTime(), so.getServiceEndTime(), locationDto, storageDto,
                 so.getCarManufacturers() != null ? Set.copyOf(so.getCarManufacturers()) : Set.of());
     }
 
@@ -26,8 +27,9 @@ public final class StorageOwnerMapper {
         LocationDto locationDto = LocationStorageMapper.toLocationDto(so.getLocation());
         StorageDto storageDto = LocationStorageMapper.toStorageDto(so.getStorage());
         return new StorageOwnerSearchResDto(so.getId(), so.getCompanyName(), so.getCosts(),
-                so.getServiceTime(), locationDto, storageDto,
-                so.getCarManufacturers() != null ? Set.copyOf(so.getCarManufacturers()) : Set.of());
+                so.getServiceStartTime(), so.getServiceEndTime(), locationDto, storageDto,
+                so.getCarManufacturers() != null ? Set.copyOf(so.getCarManufacturers()) : Set.of(),
+                so.getServices().stream().map(StorageOwnerMapper::toServiceOutputDto).toList());
     }
 
     public static ServiceOutputDto toServiceOutputDto(Service s) {

@@ -23,10 +23,6 @@ public class Request extends BaseEntity {
 
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private RequestStatus status;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "storage_owner_id", nullable = false)
     private StorageOwner storageOwner;
@@ -43,11 +39,13 @@ public class Request extends BaseEntity {
         this.storageOwner = storageOwner;
         this.type = RequestType.STELLPLATZ;
         this.description = description;
-        this.status = RequestStatus.OPEN;
     }
 
     public void addOffer(Offer offer) {
         this.offer = offer;
-        this.status = RequestStatus.CLOSED;
+    }
+
+    public void reopen() {
+        this.offer = null;
     }
 }

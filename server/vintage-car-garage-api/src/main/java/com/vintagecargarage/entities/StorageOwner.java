@@ -22,7 +22,8 @@ public class StorageOwner extends User {
     // --- STAMMDATEN ---
     private String companyName;
     private float costs;
-    private LocalTime serviceTime;
+    private LocalTime serviceStartTime;
+    private LocalTime serviceEndTime;
     @Embedded
     private Location location;
     @Embedded
@@ -46,18 +47,20 @@ public class StorageOwner extends User {
     private Set<Appointment> appointments = new HashSet<>();
 
     public StorageOwner(String email, String password, int passwordVersion, String companyName, float costs,
-            LocalTime serviceTime, Location location, Storage storage, Set<String> carManufacturers) {
+            LocalTime serviceTime, LocalTime serviceEndTime, Location location, Storage storage,
+            Set<String> carManufacturers) {
         super(email, password, passwordVersion);
         this.companyName = companyName;
         this.costs = costs;
-        this.serviceTime = serviceTime;
+        this.serviceStartTime = serviceTime;
+        this.serviceEndTime = serviceEndTime;
         this.location = location;
         this.storage = storage;
         this.carManufacturers = carManufacturers;
     }
 
     public void updateProfile(String email, String companyName, Float costs, LocalTime serviceTime,
-            Location location, Storage storage, Set<String> carManufacturers) {
+            LocalTime serviceEndTime, Location location, Storage storage, Set<String> carManufacturers) {
         if (email != null)
             changeEmail(email);
         if (companyName != null)
@@ -65,7 +68,9 @@ public class StorageOwner extends User {
         if (costs != null)
             this.costs = costs;
         if (serviceTime != null)
-            this.serviceTime = serviceTime;
+            this.serviceStartTime = serviceTime;
+        if (serviceEndTime != null)
+            this.serviceEndTime = serviceEndTime;
         if (location != null)
             this.location = location;
         if (storage != null)
@@ -86,6 +91,11 @@ public class StorageOwner extends User {
         Offer offer = new Offer(this, request, description, costs);
         this.offers.add(offer);
         return offer;
+    }
+
+    public void withdrawOffer(Offer offer) {
+        this.offers.remove(offer);
+        offer.getRequest().reopen();
     }
 
     public Appointment scheduleAppointment(AppointmentType type, LocalDateTime date, LocalTime time) {

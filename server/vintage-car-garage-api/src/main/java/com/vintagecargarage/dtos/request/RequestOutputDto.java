@@ -7,6 +7,5 @@ public record RequestOutputDto(
         RequestType type,
         String description,
         String storageOwnerId,
-        String carOwnerId,
-        boolean offerAccepted) {
+        String carOwnerId) {
 }

@@ -9,14 +9,22 @@ import com.vintagecargarage.dtos.appointment.AppointmentBookingInputDto;
 import com.vintagecargarage.dtos.appointment.AppointmentOutputDto;
 import com.vintagecargarage.dtos.car.CarInputDto;
 import com.vintagecargarage.dtos.car.CarOutputDto;
+import com.vintagecargarage.dtos.mappers.AppointmentMapper;
+import com.vintagecargarage.dtos.mappers.CarMapper;
+import com.vintagecargarage.dtos.mappers.CarOwnerMapper;
+import com.vintagecargarage.dtos.mappers.OfferMapper;
+import com.vintagecargarage.dtos.mappers.RequestMapper;
+import com.vintagecargarage.dtos.mappers.StorageOwnerMapper;
 import com.vintagecargarage.dtos.offer.OfferOutputDto;
 import com.vintagecargarage.dtos.request.RequestInputDto;
 import com.vintagecargarage.dtos.request.RequestOutputDto;
+import com.vintagecargarage.dtos.service.ServiceOutputDto;
 import com.vintagecargarage.dtos.user.CarOwnerInputDto;
 import com.vintagecargarage.dtos.user.CarOwnerOutputDto;
 import com.vintagecargarage.dtos.user.StorageOwnerSearchResDto;
 import com.vintagecargarage.entities.Appointment;
 import com.vintagecargarage.entities.AppointmentStatus;
+import com.vintagecargarage.entities.AppointmentType;
 import com.vintagecargarage.entities.Car;
 import com.vintagecargarage.entities.CarOwner;
 import com.vintagecargarage.entities.Offer;
@@ -26,12 +34,7 @@ import com.vintagecargarage.entities.Service;
 import com.vintagecargarage.entities.StorageOwner;
 import com.vintagecargarage.errors.exceptions.ConflictException;
 import com.vintagecargarage.errors.exceptions.NotFoundException;
-import com.vintagecargarage.mappers.AppointmentMapper;
-import com.vintagecargarage.mappers.CarMapper;
-import com.vintagecargarage.mappers.CarOwnerMapper;
-import com.vintagecargarage.mappers.OfferMapper;
-import com.vintagecargarage.mappers.RequestMapper;
-import com.vintagecargarage.mappers.StorageOwnerMapper;
+import com.vintagecargarage.errors.exceptions.ValidationException;
 import com.vintagecargarage.repositories.CarOwnerRepository;
 import com.vintagecargarage.repositories.StorageOwnerRepository;
 
@@ -110,11 +113,17 @@ public class CarOwnerService {
     @Transactional
     public CarOutputDto createCar(String carOwnerId, CarInputDto dto) {
         CarOwner owner = requireCarOwner(carOwnerId);
+        if (dto.licensePlate() == null || dto.licensePlate().isBlank())
+            throw new ValidationException("Kennzeichen erforderlich");
+        if (dto.category() == null)
+            throw new ValidationException("Fahrzeugkategorie erforderlich");
+        if (dto.manufacturer() == null || dto.manufacturer().isBlank())
+            throw new ValidationException("Hersteller erforderlich");
         boolean duplicatePlate = owner.getCars().stream()
                 .anyMatch(c -> dto.licensePlate().equals(c.getLicensePlate()));
         if (duplicatePlate)
             throw new ConflictException("Kennzeichen ist bereits registriert");
-        Car car = owner.registerCar(dto.licensePlate());
+        Car car = owner.registerCar(dto.licensePlate(), dto.manufacturer(), dto.category());
         carOwnerRepository.flush();
         return CarMapper.toCarOutputDto(car);
     }
@@ -130,29 +139,51 @@ public class CarOwnerService {
     @Transactional
     public CarOutputDto updateCar(String carOwnerId, String carId, CarInputDto dto) {
         CarOwner owner = requireCarOwner(carOwnerId);
-        boolean duplicatePlate = owner.getCars().stream()
-                .anyMatch(c -> !c.getId().equals(carId) && dto.licensePlate().equals(c.getLicensePlate()));
-        if (duplicatePlate)
-            throw new ConflictException("Kennzeichen ist bereits registriert");
         Car car = owner.getCars().stream()
                 .filter(c -> c.getId().equals(carId))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Fahrzeug nicht gefunden"));
-        if (dto.licensePlate() != null)
+        if (dto.licensePlate() != null) {
+            if (dto.licensePlate().isBlank())
+                throw new ValidationException("Kennzeichen erforderlich");
+            boolean duplicatePlate = owner.getCars().stream()
+                    .anyMatch(c -> !c.getId().equals(carId) && dto.licensePlate().equals(c.getLicensePlate()));
+            if (duplicatePlate)
+                throw new ConflictException("Kennzeichen ist bereits registriert");
             car.changeLicensePlate(dto.licensePlate());
+        }
+        if (dto.category() != null)
+            car.changeCategory(dto.category());
+        if (dto.manufacturer() != null) {
+            if (dto.manufacturer().isBlank())
+                throw new ValidationException("Hersteller erforderlich");
+            car.changeManufacturer(dto.manufacturer());
+        }
         return CarMapper.toCarOutputDto(car);
     }
 
     @Transactional
     public void removeCar(String carOwnerId, String carId) {
         CarOwner owner = requireCarOwner(carOwnerId);
-        owner.getCars().stream()
+        Car car = owner.getCars().stream()
                 .filter(c -> c.getId().equals(carId))
                 .findFirst()
-                .ifPresent(owner::removeCar);
+                .orElseThrow(() -> new NotFoundException("Fahrzeug nicht gefunden"));
+        if (car.getCurrentStorage() != null)
+            throw new ConflictException("Eingelagertes Fahrzeug kann nicht gelöscht werden");
+        owner.removeCar(car);
     }
 
     // --- Optionale Lagerservices buchen ---
+
+    @Transactional
+    public List<ServiceOutputDto> getOptionalServices(String carOwnerId, String storageOwnerId) {
+        requireCarOwner(carOwnerId);
+        StorageOwner owner = requireStorageOwner(storageOwnerId);
+        return owner.getServices().stream()
+                .filter(Service::isOptional)
+                .map(StorageOwnerMapper::toServiceOutputDto).toList();
+    }
 
     @Transactional
     public CarOutputDto bookOptionalService(String carOwnerId, String carId, String serviceId) {
@@ -201,6 +232,8 @@ public class CarOwnerService {
     public List<RequestOutputDto> getAllRequests(String carOwnerId) {
         CarOwner carOwner = requireCarOwner(carOwnerId);
         return carOwner.getRequests().stream()
+                .filter(r -> r.getOffer() == null
+                        || r.getOffer().getStatus() != OfferStatus.ACCEPTED)
                 .map(RequestMapper::toRequestOutputDto).toList();
     }
 
@@ -235,41 +268,58 @@ public class CarOwnerService {
                 .map(Request::getOffer)
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Angebot nicht gefunden"));
-        if (Boolean.TRUE.equals(accepted))
+        if (Boolean.TRUE.equals(accepted)) {
             offer.accept();
-        else if (Boolean.FALSE.equals(accepted))
-            offer.reject();
-        return OfferMapper.toOfferOutputDto(offer);
+            return OfferMapper.toOfferOutputDto(offer);
+        }
+        // Ablehnung: Angebot löschen und Anfrage wieder freigeben, damit der
+        // Lagerhalter ein neues Angebot erstellen kann.
+        offer.reject();
+        OfferOutputDto dto = OfferMapper.toOfferOutputDto(offer);
+        offer.getStorageOwner().withdrawOffer(offer);
+        storageOwnerRepository.getEntityManager().remove(offer);
+        return dto;
     }
 
     // --- Ein- & Auslagerungstermin koordinieren ---
-
-    @Transactional
-    public List<StorageOwnerSearchResDto> getBookableStorageOwners(String carOwnerId) {
-        CarOwner owner = requireCarOwner(carOwnerId);
-        return owner.getRequests().stream()
-                .filter(r -> r.getOffer() != null && r.getOffer().getStatus() == OfferStatus.ACCEPTED)
-                .map(Request::getStorageOwner)
-                .distinct()
-                .map(StorageOwnerMapper::toStorageOwnerSearchResDto)
-                .toList();
-    }
 
     @Transactional
     public AppointmentOutputDto bookAppointment(String carOwnerId, String storageOwnerId,
             AppointmentBookingInputDto dto) {
         CarOwner carOwner = requireCarOwner(carOwnerId);
         StorageOwner storageOwner = requireStorageOwner(storageOwnerId);
-        boolean hasAcceptedOffer = carOwner.getRequests().stream()
-                .anyMatch(r -> r.getStorageOwner().equals(storageOwner)
-                        && r.getOffer() != null
-                        && r.getOffer().getStatus() == OfferStatus.ACCEPTED);
-        if (!hasAcceptedOffer)
-            throw new ConflictException("Keine akzeptierte Buchung bei diesem Lagerhalter");
         Car car = carOwner.getCars().stream()
                 .filter(c -> c.getId().equals(dto.carId()))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Fahrzeug nicht gefunden"));
+        if (dto.type() == AppointmentType.EINLAGERUNG) {
+            // Eine Einlagerung setzt ein angenommenes Angebot des Lagerhalters voraus.
+            boolean hasAcceptedOffer = carOwner.getRequests().stream()
+                    .anyMatch(r -> r.getStorageOwner().equals(storageOwner)
+                            && r.getOffer() != null
+                            && r.getOffer().getStatus() == OfferStatus.ACCEPTED);
+            if (!hasAcceptedOffer)
+                throw new ConflictException("Keine akzeptierte Buchung bei diesem Lagerhalter");
+            if (car.getCurrentStorage() != null)
+                throw new ConflictException("Fahrzeug ist bereits eingelagert");
+            boolean pendingEinlagerung = carOwner.getBookedAppointments().stream()
+                    .anyMatch(a -> a.getType() == AppointmentType.EINLAGERUNG
+                            && a.getStatus() == AppointmentStatus.BOOKED
+                            && car.equals(a.getSubject()));
+            if (pendingEinlagerung)
+                throw new ConflictException("Für dieses Fahrzeug besteht bereits eine Einlagerung");
+        } else {
+            // Eine Auslagerung hängt nur davon ab, dass das Fahrzeug aktuell bei
+            // diesem Lagerhalter eingelagert ist – nicht (mehr) von einem Angebot.
+            if (!storageOwner.equals(car.getCurrentStorage()))
+                throw new ConflictException("Fahrzeug ist bei diesem Lagerhalter nicht eingelagert");
+            boolean pendingAuslagerung = carOwner.getBookedAppointments().stream()
+                    .anyMatch(a -> a.getType() == AppointmentType.AUSLAGERUNG
+                            && a.getStatus() == AppointmentStatus.BOOKED
+                            && car.equals(a.getSubject()));
+            if (pendingAuslagerung)
+                throw new ConflictException("Für dieses Fahrzeug besteht bereits eine Auslagerung");
+        }
         Appointment appointment = storageOwner.getAppointments().stream()
                 .filter(a -> a.getStatus() == AppointmentStatus.AVAILABLE
                         && a.getType() == dto.type()

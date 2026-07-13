@@ -1,4 +1,4 @@
-package com.vintagecargarage.mappers;
+package com.vintagecargarage.dtos.mappers;
 
 import java.util.List;
 

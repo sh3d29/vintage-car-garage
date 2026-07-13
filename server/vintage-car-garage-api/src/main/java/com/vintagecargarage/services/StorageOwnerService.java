@@ -7,6 +7,11 @@ import com.vintagecargarage.dtos.appointment.AppointmentSlotInputDto;
 import com.vintagecargarage.dtos.appointment.AppointmentOutputDto;
 import com.vintagecargarage.dtos.car.CarOutputDto;
 import com.vintagecargarage.dtos.car.CarStatusDto;
+import com.vintagecargarage.dtos.mappers.AppointmentMapper;
+import com.vintagecargarage.dtos.mappers.CarMapper;
+import com.vintagecargarage.dtos.mappers.OfferMapper;
+import com.vintagecargarage.dtos.mappers.RequestMapper;
+import com.vintagecargarage.dtos.mappers.StorageOwnerMapper;
 import com.vintagecargarage.dtos.offer.OfferInputDto;
 import com.vintagecargarage.dtos.offer.OfferOutputDto;
 import com.vintagecargarage.dtos.request.RequestOutputDto;
@@ -14,14 +19,11 @@ import com.vintagecargarage.dtos.service.ServiceInputDto;
 import com.vintagecargarage.dtos.service.ServiceOutputDto;
 import com.vintagecargarage.dtos.user.StorageOwnerInputDto;
 import com.vintagecargarage.dtos.user.StorageOwnerOutputDto;
-import com.vintagecargarage.mappers.AppointmentMapper;
-import com.vintagecargarage.mappers.CarMapper;
-import com.vintagecargarage.mappers.OfferMapper;
-import com.vintagecargarage.mappers.RequestMapper;
-import com.vintagecargarage.mappers.StorageOwnerMapper;
 import com.vintagecargarage.entities.Appointment;
 import com.vintagecargarage.entities.AppointmentStatus;
+import com.vintagecargarage.entities.AppointmentType;
 import com.vintagecargarage.entities.Car;
+import com.vintagecargarage.entities.CarOwner;
 import com.vintagecargarage.entities.Location;
 import com.vintagecargarage.entities.Offer;
 import com.vintagecargarage.entities.OfferStatus;
@@ -77,7 +79,7 @@ public class StorageOwnerService {
                 : null;
         storageOwnerRepository.persist(new StorageOwner(dto.email(), auth.hashPassword(dto.password()), 1,
                 dto.companyName(), dto.costs() != null ? dto.costs() : 0f,
-                dto.serviceTime(), location, storage,
+                dto.serviceStartTime(), dto.serviceEndTime(), location, storage,
                 dto.carManufacturers() != null ? dto.carManufacturers() : new HashSet<>()));
     }
 
@@ -101,8 +103,8 @@ public class StorageOwnerService {
         Storage storage = dto.storage() != null
                 ? new Storage(dto.storage().conditions(), dto.storage().capacity())
                 : null;
-        so.updateProfile(dto.email(), dto.companyName(), dto.costs(), dto.serviceTime(),
-                location, storage, dto.carManufacturers());
+        so.updateProfile(dto.email(), dto.companyName(), dto.costs(), dto.serviceStartTime(),
+                dto.serviceEndTime(), location, storage, dto.carManufacturers());
         if (dto.password() != null && !auth.verifyPassword(dto.password(), so.getPassword())) {
             so.changePassword(auth.hashPassword(dto.password()));
             return Optional
@@ -127,14 +129,6 @@ public class StorageOwnerService {
     public List<ServiceOutputDto> getAllServices(String storageOwnerId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
         return owner.getServices().stream().map(StorageOwnerMapper::toServiceOutputDto).toList();
-    }
-
-    @Transactional
-    public List<ServiceOutputDto> getOptionalServices(String storageOwnerId) {
-        StorageOwner owner = requireStorageOwner(storageOwnerId);
-        return owner.getServices().stream()
-                .filter(Service::isOptional)
-                .map(StorageOwnerMapper::toServiceOutputDto).toList();
     }
 
     @Transactional
@@ -196,6 +190,7 @@ public class StorageOwnerService {
     public List<RequestOutputDto> getIncomingRequests(String storageOwnerId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
         return owner.getIncomingRequests().stream()
+                .filter(r -> r.getOffer() == null)
                 .map(RequestMapper::toRequestOutputDto).toList();
     }
 
@@ -214,6 +209,7 @@ public class StorageOwnerService {
                 .orElseThrow(() -> new NotFoundException("Angebot nicht gefunden"));
         if (offer.getStatus() == OfferStatus.ACCEPTED)
             throw new ConflictException("Angenommene Angebote können nicht gelöscht werden");
+        owner.withdrawOffer(offer);
         storageOwnerRepository.getEntityManager().remove(offer);
     }
 
@@ -245,6 +241,23 @@ public class StorageOwnerService {
         if (appointment.getStatus() != AppointmentStatus.BOOKED)
             throw new ConflictException("Nur gebuchte Termine können abgeschlossen werden");
         appointment.complete();
+        // Nach abgeschlossener Einlagerung hat das angenommene Angebot seinen Zweck
+        // erfüllt: Angebot und zugehörige Anfrage werden gelöscht und verschwinden
+        // damit aus den Übersichten von Lagerhalter und Einlagerer. Das Löschen
+        // erfolgt über orphanRemoval (CarOwner.requests) + Cascade (Request.offer).
+        if (appointment.getType() == AppointmentType.EINLAGERUNG) {
+            CarOwner carOwner = appointment.getCarOwner();
+            carOwner.getRequests().stream()
+                    .filter(r -> owner.equals(r.getStorageOwner())
+                            && r.getOffer() != null
+                            && r.getOffer().getStatus() == OfferStatus.ACCEPTED)
+                    .findFirst()
+                    .ifPresent(r -> {
+                        owner.getOffers().remove(r.getOffer());
+                        owner.getIncomingRequests().remove(r);
+                        carOwner.removeRequest(r);
+                    });
+        }
         return AppointmentMapper.toAppointmentOutputDto(appointment);
     }
 
@@ -254,6 +267,10 @@ public class StorageOwnerService {
         owner.getAppointments().stream()
                 .filter(a -> a.getId().equals(appointmentId))
                 .findFirst()
-                .ifPresent(a -> storageOwnerRepository.getEntityManager().remove(a));
+                .ifPresent(a -> {
+                    if (a.getStatus() == AppointmentStatus.BOOKED)
+                        throw new ConflictException("Gebuchte Termine können nicht gelöscht werden");
+                    storageOwnerRepository.getEntityManager().remove(a);
+                });
     }
 }
