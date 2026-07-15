@@ -7,6 +7,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Service eines StorageOwner. isOptional -> vom CarOwner
+ * je Car hinzubuchbar, sonst Teil des Standard-Lagerangebots.
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,6 +32,7 @@ public class Service extends BaseEntity {
         this.isOptional = isOptional;
     }
 
+    /** aktualisiert die Servicedetails (null-Felder bleiben unverändert) */
     public void updateDetails(String title, String description, Float price, Boolean optional) {
         if (title != null)
             this.title = title;

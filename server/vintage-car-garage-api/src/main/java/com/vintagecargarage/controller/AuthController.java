@@ -1,18 +1,18 @@
 package com.vintagecargarage.controller;
 
+import java.util.Optional;
+
+import com.vintagecargarage.auth.AuthResult;
+import com.vintagecargarage.auth.UserRole;
 import com.vintagecargarage.dtos.auth.AuthUserDto;
 import com.vintagecargarage.dtos.auth.SignInDto;
 import com.vintagecargarage.errors.ErrorResponse;
 import com.vintagecargarage.services.AuthService;
-import com.vintagecargarage.auth.AuthResult;
-import com.vintagecargarage.auth.UserRole;
 
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
-
-import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -24,6 +24,11 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 
+/**
+ * Systemgrenze für die Authentifizierung unter /auth: Anmeldung
+ * (/sign-in), aktueller Benutzer (/me), Abmeldung (/sign-out). Token als
+ * HttpOnly-Cookie
+ */
 @Path("/auth")
 @ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)

@@ -12,6 +12,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Stellplatzanfrage von einem CarOwner an einen
+ * StorageOwner. Höchstens ein Offer; gilt als "offen", solange offer == null
+ * (kein eigenes Status-Feld). Offer gehört lebenszyklisch zur Request (cascade
+ * = ALL).
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -41,10 +47,12 @@ public class Request extends BaseEntity {
         this.description = description;
     }
 
+    /** verknüpft das Offer mit dieser Request */
     public void addOffer(Offer offer) {
         this.offer = offer;
     }
 
+    /** gibt die Request wieder frei (offer = null) -> gilt danach als offen */
     public void reopen() {
         this.offer = null;
     }

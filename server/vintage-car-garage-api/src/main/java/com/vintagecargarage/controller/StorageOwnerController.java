@@ -1,7 +1,10 @@
 package com.vintagecargarage.controller;
 
 import java.util.List;
+import java.util.Optional;
 
+import com.vintagecargarage.auth.AuthGuard;
+import com.vintagecargarage.auth.UserRole;
 import com.vintagecargarage.dtos.appointment.AppointmentSlotInputDto;
 import com.vintagecargarage.dtos.appointment.AppointmentOutputDto;
 import com.vintagecargarage.dtos.car.CarOutputDto;
@@ -14,13 +17,9 @@ import com.vintagecargarage.dtos.service.ServiceOutputDto;
 import com.vintagecargarage.dtos.user.StorageOwnerInputDto;
 import com.vintagecargarage.dtos.user.StorageOwnerOutputDto;
 import com.vintagecargarage.services.StorageOwnerService;
-import com.vintagecargarage.auth.AuthGuard;
-import com.vintagecargarage.auth.UserRole;
 
 import io.quarkus.security.credential.TokenCredential;
 import jakarta.annotation.security.PermitAll;
-
-import java.util.Optional;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -35,6 +34,11 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+/**
+ * Systemgrenze für die Anwendungsfälle des StorageOwner unter
+ * /storage-owners: nimmt HTTP-Anfragen entgegen, sichert den Zugriff
+ * (AuthGuard/RolesAllowed) und delegiert an den StorageOwnerService.
+ */
 @Path("/storage-owners")
 @ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)

@@ -22,10 +22,7 @@ import {
   PrimaryButton,
   TableActionButton,
 } from "~/components/Button";
-import type {
-  ServiceOutputDto,
-  StorageOwnerSearchResDto,
-} from "~/types/dtos";
+import type { ServiceOutputDto, StorageOwnerSearchResDto } from "~/types/dtos";
 
 export default function Search() {
   const { user } = useAuthContext();

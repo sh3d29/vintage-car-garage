@@ -2,7 +2,10 @@ package com.vintagecargarage.services;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
+import com.vintagecargarage.auth.Auth;
+import com.vintagecargarage.auth.UserRole;
 import com.vintagecargarage.dtos.appointment.AppointmentSlotInputDto;
 import com.vintagecargarage.dtos.appointment.AppointmentOutputDto;
 import com.vintagecargarage.dtos.car.CarOutputDto;
@@ -33,8 +36,6 @@ import com.vintagecargarage.entities.Storage;
 import com.vintagecargarage.entities.StorageOwner;
 import com.vintagecargarage.errors.exceptions.ConflictException;
 import com.vintagecargarage.errors.exceptions.NotFoundException;
-import com.vintagecargarage.auth.Auth;
-import com.vintagecargarage.auth.UserRole;
 import com.vintagecargarage.repositories.CarOwnerRepository;
 import com.vintagecargarage.repositories.StorageOwnerRepository;
 
@@ -43,8 +44,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
-import java.util.Optional;
-
+/**
+ * nimmt die
+ * Systemoperationen des StorageOwnerController entgegen, prüft die
+ * Vorbedingungen und koordiniert die Domänenobjekte (Services, Requests,
+ * Offers,
+ * Appointments, eingelagerte Cars); die Zustandsänderung liegt in den
+ * Entitäten.
+ */
 @ApplicationScoped
 public class StorageOwnerService {
 
@@ -57,6 +64,7 @@ public class StorageOwnerService {
     @Inject
     CarOwnerRepository carOwnerRepository;
 
+    /** lädt den StorageOwner oder wirft NotFoundException */
     private StorageOwner requireStorageOwner(String id) {
         StorageOwner so = storageOwnerRepository.findById(id);
         if (so == null)
@@ -66,6 +74,10 @@ public class StorageOwnerService {
 
     // --- Benutzer registrieren ---
 
+    /**
+     * registriert einen neuen StorageOwner samt Location/Storage (E-Mail
+     * rollenübergreifend eindeutig)
+     */
     @Transactional
     public void createStorageOwner(StorageOwnerInputDto dto) {
         if (storageOwnerRepository.isEmailTaken(dto.email()) || carOwnerRepository.isEmailTaken(dto.email()))
@@ -85,11 +97,16 @@ public class StorageOwnerService {
 
     // --- Benutzer verwalten ---
 
+    /** Profildaten des StorageOwner */
     @Transactional
     public StorageOwnerOutputDto getStorageOwner(String id) {
         return StorageOwnerMapper.toStorageOwnerOutputDto(requireStorageOwner(id));
     }
 
+    /**
+     * aktualisiert die Stammdaten; bei Passwortwechsel neues Token (alte Version
+     * verfällt)
+     */
     @Transactional
     public Optional<TokenCredential> updateStorageOwner(String id, StorageOwnerInputDto dto) {
         StorageOwner so = requireStorageOwner(id);
@@ -115,6 +132,7 @@ public class StorageOwnerService {
 
     // --- Serviceportfolio verwalten & Optionale Services verwalten ---
 
+    /** legt einen neuen Service im Portfolio an */
     @Transactional
     public ServiceOutputDto createService(String storageOwnerId, ServiceInputDto dto) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -125,12 +143,14 @@ public class StorageOwnerService {
         return StorageOwnerMapper.toServiceOutputDto(service);
     }
 
+    /** gesamtes Serviceportfolio */
     @Transactional
     public List<ServiceOutputDto> getAllServices(String storageOwnerId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
         return owner.getServices().stream().map(StorageOwnerMapper::toServiceOutputDto).toList();
     }
 
+    /** aktualisiert einen Service des Portfolios */
     @Transactional
     public ServiceOutputDto updateService(String storageOwnerId, String serviceId, ServiceInputDto dto) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -142,6 +162,7 @@ public class StorageOwnerService {
         return StorageOwnerMapper.toServiceOutputDto(service);
     }
 
+    /** entfernt einen Service aus dem Portfolio */
     @Transactional
     public void deleteService(String storageOwnerId, String serviceId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -153,12 +174,16 @@ public class StorageOwnerService {
 
     // --- Fahrzeugstatus aktualisieren ---
 
+    /** alle aktuell eingelagerten Cars */
     @Transactional
     public List<CarOutputDto> getStoredCars(String storageOwnerId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
         return owner.getStoredCars().stream().map(CarMapper::toCarOutputDto).toList();
     }
 
+    /**
+     * aktualisiert den Zustand (fahrbereit/gewartet) eines hier eingelagerten Car
+     */
     @Transactional
     public CarOutputDto updateStoredCarStatus(String storageOwnerId, String carId, CarStatusDto dto) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -172,6 +197,10 @@ public class StorageOwnerService {
 
     // --- Stellplatzanfragen verwalten ---
 
+    /**
+     * erstellt ein Offer auf eine eingegangene Request (höchstens ein Offer je
+     * Request)
+     */
     @Transactional
     public OfferOutputDto createOffer(String storageOwnerId, String requestId, OfferInputDto dto) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -186,6 +215,7 @@ public class StorageOwnerService {
         return OfferMapper.toOfferOutputDto(offer);
     }
 
+    /** offene Eingangs-Requests (noch ohne Offer) */
     @Transactional
     public List<RequestOutputDto> getIncomingRequests(String storageOwnerId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -194,12 +224,14 @@ public class StorageOwnerService {
                 .map(RequestMapper::toRequestOutputDto).toList();
     }
 
+    /** alle abgegebenen Offers */
     @Transactional
     public List<OfferOutputDto> getAllOffers(String storageOwnerId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
         return owner.getOffers().stream().map(OfferMapper::toOfferOutputDto).toList();
     }
 
+    /** zieht ein Offer zurück + gibt die Request frei (nicht bei ACCEPTED) */
     @Transactional
     public void deleteOffer(String storageOwnerId, String offerId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -215,6 +247,7 @@ public class StorageOwnerService {
 
     // --- Ein- & Auslagerungstermin koordinieren ---
 
+    /** legt einen neuen freien Ein-/Auslagerungs-Slot an */
     @Transactional
     public AppointmentOutputDto createAppointment(String storageOwnerId, AppointmentSlotInputDto dto) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -223,6 +256,7 @@ public class StorageOwnerService {
         return AppointmentMapper.toAppointmentOutputDto(appointment);
     }
 
+    /** alle noch nicht abgeschlossenen Termine (frei + gebucht) */
     @Transactional
     public List<AppointmentOutputDto> getAllAppointments(String storageOwnerId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -231,6 +265,11 @@ public class StorageOwnerService {
                 .map(AppointmentMapper::toAppointmentOutputDto).toList();
     }
 
+    /**
+     * schließt einen gebuchten Termin ab (stößt Umlagerung via
+     * Appointment.complete() an);
+     * nach EINLAGERUNG werden das angenommene Offer + die Request entfernt
+     */
     @Transactional
     public AppointmentOutputDto completeAppointment(String storageOwnerId, String appointmentId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);
@@ -261,6 +300,7 @@ public class StorageOwnerService {
         return AppointmentMapper.toAppointmentOutputDto(appointment);
     }
 
+    /** löscht einen freien Termin-Slot (nicht bei BOOKED) */
     @Transactional
     public void deleteAppointment(String storageOwnerId, String appointmentId) {
         StorageOwner owner = requireStorageOwner(storageOwnerId);

@@ -43,6 +43,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
+/**
+ * nimmt die
+ * Systemoperationen des CarOwnerController entgegen, prüft die
+ * Vorbedingungen und koordiniert die Domänenobjekte; die eigentliche
+ * Zustandsänderung liegt in den Entitäten.
+ */
 @ApplicationScoped
 public class CarOwnerService {
 
@@ -55,6 +61,7 @@ public class CarOwnerService {
     @Inject
     StorageOwnerRepository storageOwnerRepository;
 
+    /** lädt den CarOwner oder wirft NotFoundException */
     private CarOwner requireCarOwner(String id) {
         CarOwner co = carOwnerRepository.findById(id);
         if (co == null)
@@ -62,6 +69,7 @@ public class CarOwnerService {
         return co;
     }
 
+    /** lädt den StorageOwner oder wirft NotFoundException */
     private StorageOwner requireStorageOwner(String id) {
         StorageOwner so = storageOwnerRepository.findById(id);
         if (so == null)
@@ -71,6 +79,7 @@ public class CarOwnerService {
 
     // --- Benutzer registrieren ---
 
+    /** registriert einen neuen CarOwner (E-Mail rollenübergreifend eindeutig) */
     @Transactional
     public void createCarOwner(CarOwnerInputDto dto) {
         if (carOwnerRepository.isEmailTaken(dto.email()) || storageOwnerRepository.isEmailTaken(dto.email()))
@@ -81,11 +90,16 @@ public class CarOwnerService {
 
     // --- Benutzer verwalten ---
 
+    /** Profildaten des CarOwner */
     @Transactional
     public CarOwnerOutputDto getCarOwner(String id) {
         return CarOwnerMapper.toCarOwnerOutputDto(requireCarOwner(id));
     }
 
+    /**
+     * aktualisiert das Profil; bei Passwortwechsel neues Token (alte Version
+     * verfällt)
+     */
     @Transactional
     public Optional<TokenCredential> updateCarOwner(String id, CarOwnerInputDto dto) {
         CarOwner co = requireCarOwner(id);
@@ -102,6 +116,7 @@ public class CarOwnerService {
 
     // --- Stellplatz suchen ---
 
+    /** Stellplatzsuche: StorageOwner nach Standort-Ort */
     @Transactional
     public List<StorageOwnerSearchResDto> searchByCity(String city) {
         return storageOwnerRepository.findByCity(city).stream()
@@ -110,6 +125,10 @@ public class CarOwnerService {
 
     // --- Fahrzeug registrieren ---
 
+    /**
+     * registriert ein Car (Kennzeichen/Kategorie/Hersteller Pflicht, Kennzeichen je
+     * Halter eindeutig)
+     */
     @Transactional
     public CarOutputDto createCar(String carOwnerId, CarInputDto dto) {
         CarOwner owner = requireCarOwner(carOwnerId);
@@ -130,12 +149,16 @@ public class CarOwnerService {
 
     // --- Fahrzeuge verwalten ---
 
+    /** alle Cars des CarOwner */
     @Transactional
     public List<CarOutputDto> getAllCars(String carOwnerId) {
         CarOwner owner = requireCarOwner(carOwnerId);
         return owner.getCars().stream().map(CarMapper::toCarOutputDto).toList();
     }
 
+    /**
+     * aktualisiert ein Car (Felder einzeln; Kennzeichen bleibt je Halter eindeutig)
+     */
     @Transactional
     public CarOutputDto updateCar(String carOwnerId, String carId, CarInputDto dto) {
         CarOwner owner = requireCarOwner(carOwnerId);
@@ -162,6 +185,7 @@ public class CarOwnerService {
         return CarMapper.toCarOutputDto(car);
     }
 
+    /** löscht ein Car (nicht möglich, solange es eingelagert ist) */
     @Transactional
     public void removeCar(String carOwnerId, String carId) {
         CarOwner owner = requireCarOwner(carOwnerId);
@@ -176,6 +200,7 @@ public class CarOwnerService {
 
     // --- Optionale Lagerservices buchen ---
 
+    /** optional buchbare Services des StorageOwner */
     @Transactional
     public List<ServiceOutputDto> getOptionalServices(String carOwnerId, String storageOwnerId) {
         requireCarOwner(carOwnerId);
@@ -185,6 +210,10 @@ public class CarOwnerService {
                 .map(StorageOwnerMapper::toServiceOutputDto).toList();
     }
 
+    /**
+     * bucht einen optionalen Service für ein Car (nur beim aktuellen
+     * Lager-StorageOwner)
+     */
     @Transactional
     public CarOutputDto bookOptionalService(String carOwnerId, String carId, String serviceId) {
         CarOwner carOwner = requireCarOwner(carOwnerId);
@@ -203,6 +232,7 @@ public class CarOwnerService {
         return CarMapper.toCarOutputDto(car);
     }
 
+    /** entfernt einen gebuchten optionalen Service von einem Car */
     @Transactional
     public void removeBookedService(String carOwnerId, String carId, String serviceId) {
         CarOwner owner = requireCarOwner(carOwnerId);
@@ -219,6 +249,7 @@ public class CarOwnerService {
 
     // --- Stellplatzangebot anfordern ---
 
+    /** stellt eine Request (Stellplatzanfrage) an einen StorageOwner */
     @Transactional
     public RequestOutputDto createRequest(String carOwnerId, RequestInputDto dto) {
         CarOwner carOwner = requireCarOwner(carOwnerId);
@@ -228,6 +259,7 @@ public class CarOwnerService {
         return RequestMapper.toRequestOutputDto(request);
     }
 
+    /** noch relevante Requests (offen oder mit noch nicht angenommenem Offer) */
     @Transactional
     public List<RequestOutputDto> getAllRequests(String carOwnerId) {
         CarOwner carOwner = requireCarOwner(carOwnerId);
@@ -237,6 +269,7 @@ public class CarOwnerService {
                 .map(RequestMapper::toRequestOutputDto).toList();
     }
 
+    /** löscht eine Request (nicht möglich bei bereits angenommenem Offer) */
     @Transactional
     public void deleteRequest(String carOwnerId, String requestId) {
         CarOwner carOwner = requireCarOwner(carOwnerId);
@@ -251,6 +284,7 @@ public class CarOwnerService {
 
     // --- Stellplatzangebote verwalten ---
 
+    /** alle auf die eigenen Requests erhaltenen Offers */
     @Transactional
     public List<OfferOutputDto> getReceivedOffers(String carOwnerId) {
         CarOwner owner = requireCarOwner(carOwnerId);
@@ -260,6 +294,10 @@ public class CarOwnerService {
                 .toList();
     }
 
+    /**
+     * Antwort auf ein Offer: annehmen (ACCEPTED) oder ablehnen (Offer löschen +
+     * Request wieder freigeben, damit ein neues Offer möglich ist)
+     */
     @Transactional
     public OfferOutputDto respondToOffer(String carOwnerId, String offerId, Boolean accepted) {
         CarOwner owner = requireCarOwner(carOwnerId);
@@ -283,6 +321,12 @@ public class CarOwnerService {
 
     // --- Ein- & Auslagerungstermin koordinieren ---
 
+    /**
+     * bucht für ein Car einen freien Termin: EINLAGERUNG setzt angenommenes Offer
+     * + noch nicht eingelagert voraus, AUSLAGERUNG setzt aktuelle Einlagerung
+     * voraus;
+     * je Car nur ein offener Termin gleicher Art. Umlagerung erst beim Abschluss.
+     */
     @Transactional
     public AppointmentOutputDto bookAppointment(String carOwnerId, String storageOwnerId,
             AppointmentBookingInputDto dto) {
@@ -332,6 +376,7 @@ public class CarOwnerService {
         return AppointmentMapper.toAppointmentOutputDto(appointment);
     }
 
+    /** aktuell freie (buchbare) Termine des StorageOwner */
     @Transactional
     public List<AppointmentOutputDto> getAvailableAppointments(String carOwnerId, String storageOwnerId) {
         requireCarOwner(carOwnerId);
@@ -342,6 +387,7 @@ public class CarOwnerService {
                 .toList();
     }
 
+    /** noch nicht abgeschlossene, vom CarOwner gebuchte Termine */
     @Transactional
     public List<AppointmentOutputDto> getAllBookedAppointments(String carOwnerId) {
         CarOwner owner = requireCarOwner(carOwnerId);
@@ -350,6 +396,9 @@ public class CarOwnerService {
                 .map(AppointmentMapper::toAppointmentOutputDto).toList();
     }
 
+    /**
+     * storniert einen gebuchten Termin (Slot wird wieder frei; nicht bei COMPLETED)
+     */
     @Transactional
     public void cancelAppointment(String carOwnerId, String appointmentId) {
         CarOwner owner = requireCarOwner(carOwnerId);

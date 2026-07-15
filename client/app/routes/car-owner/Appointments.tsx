@@ -71,17 +71,17 @@ export default function Appointments() {
       `/car-owners/${id}/offers`,
     );
     const bookable = new Map<string, string>();
-    // Einlagerung: Lagerhalter mit angenommenem Angebot
     for (const o of value ?? []) {
-      if (o.accepted === true) bookable.set(o.storageOwnerId, o.storageOwnerName);
+      if (o.accepted === true)
+        bookable.set(o.storageOwnerId, o.storageOwnerName);
     }
-    // Auslagerung: Lagerhalter, bei denen aktuell ein Fahrzeug eingelagert ist
-    // (hängt nicht mehr von einem Angebot ab)
     for (const c of cars) {
       if (c.currentStorageOwnerId && c.currentStorageOwnerName)
         bookable.set(c.currentStorageOwnerId, c.currentStorageOwnerName);
     }
-    setOwners([...bookable].map(([oid, companyName]) => ({ id: oid, companyName })));
+    setOwners(
+      [...bookable].map(([oid, companyName]) => ({ id: oid, companyName })),
+    );
   }
 
   async function selectOwner(value: string | null) {
