@@ -10,6 +10,11 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Angebot eines StorageOwner auf eine Request.
+ * Trägt Konditionen + OfferStatus (PENDING -> ACCEPTED/REJECTED); strikte
+ * 1:1-Beziehung zur Request, die der Konstruktor beidseitig herstellt.
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -39,10 +44,12 @@ public class Offer extends BaseEntity {
         request.addOffer(this);
     }
 
+    /** Angebot angenommen */
     public void accept() {
         this.status = OfferStatus.ACCEPTED;
     }
 
+    /** Angebot abgelehnt */
     public void reject() {
         this.status = OfferStatus.REJECTED;
     }

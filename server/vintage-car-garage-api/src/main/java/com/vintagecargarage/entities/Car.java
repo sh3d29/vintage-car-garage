@@ -15,6 +15,11 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Fahrzeug: gehört zu einem CarOwner, optional bei einem
+ * StorageOwner eingelagert; Information Expert für den eigenen Zustand und die
+ * Fahrzeugumlagerung. Kennzeichen je Halter eindeutig (UniqueConstraint).
+ */
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = { "car_owner_id", "licensePlate" }))
 @Getter
@@ -51,11 +56,16 @@ public class Car extends BaseEntity {
         this.currentStorage = null;
     }
 
+    /** aktualisiert den vom Lagerhalter gepflegten Zustand (fahrbereit/gewartet) */
     public void updateStatus(boolean readyToDrive, boolean maintained) {
         this.readyToDrive = readyToDrive;
         this.isMaintained = maintained;
     }
 
+    /**
+     * Fahrzeugumlagerung: aus altem Lager entfernen, in neues aufnehmen (null =
+     * auslagern)
+     */
     public void relocateTo(StorageOwner newStorageOwner) {
         if (this.currentStorage != null)
             this.currentStorage.removeCarFromStorage(this);
@@ -63,26 +73,32 @@ public class Car extends BaseEntity {
             newStorageOwner.addCarToStorage(this);
     }
 
+    /** ändert das Kennzeichen */
     public void changeLicensePlate(String licensePlate) {
         this.licensePlate = licensePlate;
     }
 
+    /** ändert die Kategorie (Youngtimer/Oldtimer) */
     public void changeCategory(CarCategory category) {
         this.category = category;
     }
 
+    /** ändert den Hersteller */
     public void changeManufacturer(String manufacturer) {
         this.manufacturer = manufacturer;
     }
 
+    /** interne Kopplung, genutzt von StorageOwner.add-/removeCarFromStorage */
     public void setCurrentStorage(StorageOwner currentStorage) {
         this.currentStorage = currentStorage;
     }
 
+    /** bucht einen optionalen Service hinzu */
     public void addBookedOptionalService(Service service) {
         this.bookedServices.add(service);
     }
 
+    /** entfernt einen gebuchten optionalen Service */
     public void removeBookedOptionalService(Service service) {
         this.bookedServices.remove(service);
     }

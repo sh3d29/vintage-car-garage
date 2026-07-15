@@ -12,6 +12,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Ein-/Auslagerungstermin: StorageOwner bietet freien
+ * Slot an, CarOwner bucht ihn für ein Car. Lebenszyklus AppointmentStatus
+ * AVAILABLE -> BOOKED -> COMPLETED (Stornieren -> wieder AVAILABLE). Die
+ * Fahrzeugumlagerung
+ * erfolgt erst beim complete(), nicht beim Buchen.
+ */
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -46,6 +53,7 @@ public class Appointment extends BaseEntity {
         this.status = AppointmentStatus.AVAILABLE;
     }
 
+    /** bucht den freien Slot für CarOwner + Car (Status BOOKED) */
     public void book(CarOwner carOwner, Car car) {
         this.carOwner = carOwner;
         this.subject = car;
@@ -53,7 +61,7 @@ public class Appointment extends BaseEntity {
     }
 
     /**
-     * Schließt den Termin ab und führt die eigentliche Umlagerung durch:
+     * Schließt den Termin ab und führt die eigentliche Fahrzeugumlagerung durch:
      * Bei EINLAGERUNG wird das Fahrzeug dem Lagerhalter zugeordnet, bei
      * AUSLAGERUNG aus dem Lager entfernt.
      */

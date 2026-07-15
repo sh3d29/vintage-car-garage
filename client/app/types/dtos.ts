@@ -1,4 +1,3 @@
-// --- Auth ---
 export type UserRole = "car-owner" | "storage-owner";
 
 export interface SignInDto {
@@ -10,8 +9,6 @@ export interface AuthUserDto {
   role: UserRole;
   user: CarOwnerOutputDto | StorageOwnerOutputDto;
 }
-
-// --- User / CarOwner ---
 
 export interface CarOwnerInputDto {
   email: string;
@@ -26,8 +23,6 @@ export interface CarOwnerOutputDto {
   firstName: string;
   lastName: string;
 }
-
-// --- User / StorageOwner ---
 
 export interface LocationDto {
   street: string;
@@ -77,8 +72,6 @@ export interface StorageOwnerSearchResDto {
   services: ServiceOutputDto[];
 }
 
-// --- Car ---
-
 export type CarCategory = "YOUNGTIMER" | "OLDTIMER";
 
 export interface CarInputDto {
@@ -104,8 +97,6 @@ export interface CarStatusDto {
   isMaintained: boolean;
 }
 
-// --- Service ---
-
 export interface ServiceInputDto {
   title: string;
   description: string;
@@ -121,8 +112,6 @@ export interface ServiceOutputDto {
   isOptional: boolean;
 }
 
-// --- Request ---
-
 export type RequestType = "STELLPLATZ";
 
 export interface RequestInputDto {
@@ -137,8 +126,6 @@ export interface RequestOutputDto {
   storageOwnerId: string;
   carOwnerId: string | null;
 }
-
-// --- Offer ---
 
 export interface OfferInputDto {
   description: string;
@@ -159,8 +146,6 @@ export interface OfferOutputDto {
 export interface OfferResponseDto {
   accepted: boolean;
 }
-
-// --- Appointment ---
 
 export type AppointmentType = "EINLAGERUNG" | "AUSLAGERUNG";
 

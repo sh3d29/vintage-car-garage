@@ -43,9 +43,9 @@ const CATEGORY_LABELS: Record<CarCategory, string> = {
   OLDTIMER: "Oldtimer",
 };
 
-const CATEGORY_OPTIONS = (
-  Object.keys(CATEGORY_LABELS) as CarCategory[]
-).map((value) => ({ value, label: CATEGORY_LABELS[value] }));
+const CATEGORY_OPTIONS = (Object.keys(CATEGORY_LABELS) as CarCategory[]).map(
+  (value) => ({ value, label: CATEGORY_LABELS[value] }),
+);
 
 export default function Cars() {
   const { user } = useAuthContext();

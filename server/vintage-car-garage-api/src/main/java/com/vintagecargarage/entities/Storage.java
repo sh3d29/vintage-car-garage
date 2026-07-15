@@ -7,6 +7,10 @@ import jakarta.persistence.Embeddable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Lagerbedingungen + Kapazität eines
+ * StorageOwner; als Embeddable direkt im Lagerhalter eingebettet.
+ */
 @Embeddable
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)

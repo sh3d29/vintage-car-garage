@@ -4,6 +4,10 @@ import jakarta.persistence.Embeddable;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Wertobjekt: Adresse eines StorageOwner;
+ * als Embeddable eingebettet, Basis der Ortssuche.
+ */
 @Embeddable
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
