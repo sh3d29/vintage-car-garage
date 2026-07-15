@@ -1,3 +1,0 @@
-# Vintage Car Garage
-
-## Development
