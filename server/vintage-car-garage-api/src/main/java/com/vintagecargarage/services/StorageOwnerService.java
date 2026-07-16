@@ -240,7 +240,7 @@ public class StorageOwnerService {
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("Angebot nicht gefunden"));
         if (offer.getStatus() == OfferStatus.ACCEPTED)
-            throw new ConflictException("Angenommene Angebote können nicht gelöscht werden");
+            throw new ConflictException("Angenommene Angebote können nicht zurückgezogen werden");
         owner.withdrawOffer(offer);
         storageOwnerRepository.getEntityManager().remove(offer);
     }
